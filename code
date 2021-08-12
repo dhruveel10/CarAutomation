@@ -1,0 +1,73 @@
+#include "DHT.h"
+#include <SoftwareSerial.h>
+#define dhtp 13
+#define DHTTYPE DHT11
+SoftwareSerial BTserial(0,1);
+DHT dht(dhtp, DHTTYPE);
+const int echoPin1 = 2; // Echo Pin of Ultrasonic Sensor1
+const int pingPin1 = 3; // Trigger Pin of Ultrasonic Sensor1
+int rled = 4;
+int wled = 5;
+int ac = 12;
+
+void setup()
+{
+  BTserial.begin(9600); // Starting Serial Communication
+  dht.begin();
+  pinMode(pingPin1, OUTPUT); // initialising pin 3 as output
+  pinMode(echoPin1, INPUT); // initialising pin 2 as input
+  pinMode(rled, OUTPUT); //Low Distance Indicator
+  pinMode(wled, OUTPUT); //Headlight
+  pinMode(ac, OUTPUT);
+}
+
+void loop()
+{
+  long duration1, inches1, cm1;
+  digitalWrite(pingPin1, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin1, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(pingPin1, LOW);
+  duration1 = pulseIn(echoPin1, HIGH);// using pulsin function to determine total time
+  cm1 = microsecondsToCentimeters(duration1);// calling method
+  if(cm1<=100)
+  {
+    digitalWrite(rled, HIGH);
+  }
+  else
+  {
+    digitalWrite(rled, LOW);
+  }
+  delay(100);
+  float humid = dht.readHumidity();
+  int temp = dht.readTemperature();
+  if(temp>=30)
+  {
+    digitalWrite(ac, HIGH);
+  }
+  else
+  {
+    digitalWrite(ac, LOW);
+  }
+  int sensorValue = analogRead(A0);
+  if(sensorValue<100)
+  {
+    digitalWrite(wled, HIGH);
+  }
+  else
+  {
+    digitalWrite(wled, LOW);
+  }
+  BTserial.print(cm1);
+  BTserial.print(",");
+  BTserial.print(temp);
+  BTserial.print(",");
+  BTserial.print(sensorValue);
+  BTserial.print(";");
+  delay(20);
+}
+long microsecondsToCentimeters(long microseconds) // method to covert microsec to centimeters
+{
+  return microseconds / 29 / 2;
+}
